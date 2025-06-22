@@ -14,6 +14,8 @@ import json
 from location import get_location
 
 
+
+
 def find_angle_time(observer, tz, angle_target):
     now = datetime.combine(date.today(), datetime.min.time())
     t = tz.localize(now + timedelta(hours=4))  # Start search around dawn

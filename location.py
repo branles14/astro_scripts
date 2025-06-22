@@ -51,7 +51,6 @@ def _termux_location() -> tuple[str | None, str | None]:
     return None, None
 
 
-
 def get_location(
     lat: float | None = None, lon: float | None = None, timezone: str | None = None
 ):

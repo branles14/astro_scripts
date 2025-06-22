@@ -22,4 +22,4 @@ observer = city.observer
 
 # Get solar angle
 angle = elevation(observer, now)
-print(f"Solar angle at {now.strftime('%H:%M')}: {angle:.2f}°")
+print(f"{angle:.2f}°")

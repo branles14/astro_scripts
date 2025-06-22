@@ -7,47 +7,13 @@ from astral.sun import (
     elevation,
 )
 from datetime import date, datetime, timedelta
-from pathlib import Path
+import argparse
 import pytz
 import json
-import os
+
+from location import get_location
 
 
-def load_env_vars():
-    lat = os.getenv("LATITUDE")
-    lon = os.getenv("LONGITUDE")
-    tz = os.getenv("TIMEZONE")
-
-    env_path = Path(__file__).resolve().parent / ".env"
-    if (not lat or not lon) and env_path.exists():
-        with open(env_path) as f:
-            for line in f:
-                if "=" in line:
-                    k, v = line.strip().split("=", 1)
-                    if k == "LATITUDE" and not lat:
-                        lat = v
-                    elif k == "LONGITUDE" and not lon:
-                        lon = v
-                    elif k == "TIMEZONE" and not tz:
-                        tz = v
-
-    config_path = Path.home() / ".config/location"
-    if (not lat or not lon) and config_path.exists():
-        with open(config_path) as f:
-            for line in f:
-                if "=" in line:
-                    k, v = line.strip().split("=", 1)
-                    if k == "LATITUDE" and not lat:
-                        lat = v
-                    elif k == "LONGITUDE" and not lon:
-                        lon = v
-                    elif k == "TIMEZONE" and not tz:
-                        tz = v
-
-    if not lat or not lon or not tz:
-        raise ValueError("LATITUDE, LONGITUDE, or TIMEZONE not found")
-
-    return float(lat), float(lon), tz
 
 
 def find_angle_time(observer, tz, angle_target):
@@ -65,7 +31,13 @@ def find_angle_time(observer, tz, angle_target):
 
 
 # === Main logic ===
-lat, lon, timezone = load_env_vars()
+parser = argparse.ArgumentParser(description="Display solar timetable for today")
+parser.add_argument("--lat", type=float, help="Latitude")
+parser.add_argument("--lon", type=float, help="Longitude")
+parser.add_argument("--tz", help="Timezone")
+args = parser.parse_args()
+
+lat, lon, timezone = get_location(args.lat, args.lon, args.tz)
 city = LocationInfo("Custom", "Earth", timezone, lat, lon)
 tz = pytz.timezone(timezone)
 today = date.today()

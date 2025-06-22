@@ -1,52 +1,18 @@
-from astral import LocationInfo
+from astral import LocationInfo, Depression
 from astral.sun import (
-    sunrise, sunset,
-    civil_dawn, civil_dusk,
-    nautical_dawn, nautical_dusk,
-    astronomical_dawn, astronomical_dusk,
-    elevation
+    sunrise,
+    sunset,
+    dawn,
+    dusk,
+    elevation,
 )
 from datetime import date, datetime, timedelta
-from pathlib import Path
+import argparse
 import pytz
 import json
-import os
 
-def load_env_vars():
-    lat = os.getenv("LATITUDE")
-    lon = os.getenv("LONGITUDE")
-    tz = os.getenv("TIMEZONE")
+from location import get_location
 
-    env_path = Path(__file__).resolve().parent / ".env"
-    if (not lat or not lon) and env_path.exists():
-        with open(env_path) as f:
-            for line in f:
-                if "=" in line:
-                    k, v = line.strip().split("=", 1)
-                    if k == "LATITUDE" and not lat:
-                        lat = v
-                    elif k == "LONGITUDE" and not lon:
-                        lon = v
-                    elif k == "TIMEZONE" and not tz:
-                        tz = v
-
-    config_path = Path.home() / ".config/location"
-    if (not lat or not lon) and config_path.exists():
-        with open(config_path) as f:
-            for line in f:
-                if "=" in line:
-                    k, v = line.strip().split("=", 1)
-                    if k == "LATITUDE" and not lat:
-                        lat = v
-                    elif k == "LONGITUDE" and not lon:
-                        lon = v
-                    elif k == "TIMEZONE" and not tz:
-                        tz = v
-
-    if not lat or not lon or not tz:
-        raise ValueError("LATITUDE, LONGITUDE, or TIMEZONE not found")
-
-    return float(lat), float(lon), tz
 
 def find_angle_time(observer, tz, angle_target):
     now = datetime.combine(date.today(), datetime.min.time())
@@ -61,8 +27,15 @@ def find_angle_time(observer, tz, angle_target):
         t += step
     return None
 
+
 # === Main logic ===
-lat, lon, timezone = load_env_vars()
+parser = argparse.ArgumentParser(description="Display solar timetable for today")
+parser.add_argument("--lat", type=float, help="Latitude")
+parser.add_argument("--lon", type=float, help="Longitude")
+parser.add_argument("--tz", help="Timezone")
+args = parser.parse_args()
+
+lat, lon, timezone = get_location(args.lat, args.lon, args.tz)
 city = LocationInfo("Custom", "Earth", timezone, lat, lon)
 tz = pytz.timezone(timezone)
 today = date.today()
@@ -72,21 +45,33 @@ result = {
     "sunrise": sunrise(obs, today, tzinfo=tz).strftime("%H:%M"),
     "sunset": sunset(obs, today, tzinfo=tz).strftime("%H:%M"),
     "dawn": {
-        "civil": civil_dawn(obs, today, tzinfo=tz).strftime("%H:%M"),
-        "nautical": nautical_dawn(obs, today, tzinfo=tz).strftime("%H:%M"),
-        "astronomical": astronomical_dawn(obs, today, tzinfo=tz).strftime("%H:%M"),
+        "civil": dawn(obs, today, depression=Depression.CIVIL, tzinfo=tz).strftime(
+            "%H:%M"
+        ),
+        "nautical": dawn(
+            obs, today, depression=Depression.NAUTICAL, tzinfo=tz
+        ).strftime("%H:%M"),
+        "astronomical": dawn(
+            obs, today, depression=Depression.ASTRONOMICAL, tzinfo=tz
+        ).strftime("%H:%M"),
     },
     "dusk": {
-        "civil": civil_dusk(obs, today, tzinfo=tz).strftime("%H:%M"),
-        "nautical": nautical_dusk(obs, today, tzinfo=tz).strftime("%H:%M"),
-        "astronomical": astronomical_dusk(obs, today, tzinfo=tz).strftime("%H:%M"),
+        "civil": dusk(obs, today, depression=Depression.CIVIL, tzinfo=tz).strftime(
+            "%H:%M"
+        ),
+        "nautical": dusk(
+            obs, today, depression=Depression.NAUTICAL, tzinfo=tz
+        ).strftime("%H:%M"),
+        "astronomical": dusk(
+            obs, today, depression=Depression.ASTRONOMICAL, tzinfo=tz
+        ).strftime("%H:%M"),
     },
     "angle": {
         "35": find_angle_time(obs, tz, 35),
         "40": find_angle_time(obs, tz, 40),
         "75": find_angle_time(obs, tz, 75),
-        "90": find_angle_time(obs, tz, 90)
-    }
+        "90": find_angle_time(obs, tz, 90),
+    },
 }
 
 print(json.dumps(result, indent=2))

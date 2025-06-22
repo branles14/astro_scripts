@@ -1,3 +1,4 @@
+#!/bin/python3
 from astral import LocationInfo
 from astral.sun import elevation
 from datetime import datetime, timedelta

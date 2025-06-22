@@ -14,8 +14,6 @@ import json
 from location import get_location
 
 
-
-
 def find_angle_time(observer, tz, angle_target):
     now = datetime.combine(date.today(), datetime.min.time())
     t = tz.localize(now + timedelta(hours=4))  # Start search around dawn
@@ -34,10 +32,10 @@ def find_angle_time(observer, tz, angle_target):
 parser = argparse.ArgumentParser(description="Display solar timetable for today")
 parser.add_argument("--lat", type=float, help="Latitude")
 parser.add_argument("--lon", type=float, help="Longitude")
-parser.add_argument("--tz", help="Timezone")
 args = parser.parse_args()
 
-lat, lon, timezone = get_location(args.lat, args.lon, args.tz)
+lat, lon, timezone = get_location(args.lat, args.lon)
+
 city = LocationInfo("Custom", "Earth", timezone, lat, lon)
 tz = pytz.timezone(timezone)
 today = date.today()

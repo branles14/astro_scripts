@@ -9,10 +9,10 @@ from location import get_location
 parser = argparse.ArgumentParser(description="Show today's sunrise time")
 parser.add_argument("--lat", type=float, help="Latitude")
 parser.add_argument("--lon", type=float, help="Longitude")
-parser.add_argument("--tz", help="Timezone")
 args = parser.parse_args()
 
-lat, lon, tz_name = get_location(args.lat, args.lon, args.tz)
+lat, lon, tz_name = get_location(args.lat, args.lon)
+
 city = LocationInfo("Custom", "Earth", tz_name, lat, lon)
 s = sun(city.observer, date=date.today(), tzinfo=tz_name)
 

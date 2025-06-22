@@ -1,16 +1,17 @@
-from astral import LocationInfo
+from astral import LocationInfo, Depression
 from astral.sun import (
-    sunrise, sunset,
-    civil_dawn, civil_dusk,
-    nautical_dawn, nautical_dusk,
-    astronomical_dawn, astronomical_dusk,
-    elevation
+    sunrise,
+    sunset,
+    dawn,
+    dusk,
+    elevation,
 )
 from datetime import date, datetime, timedelta
 from pathlib import Path
 import pytz
 import json
 import os
+
 
 def load_env_vars():
     lat = os.getenv("LATITUDE")
@@ -48,6 +49,7 @@ def load_env_vars():
 
     return float(lat), float(lon), tz
 
+
 def find_angle_time(observer, tz, angle_target):
     now = datetime.combine(date.today(), datetime.min.time())
     t = tz.localize(now + timedelta(hours=4))  # Start search around dawn
@@ -61,6 +63,7 @@ def find_angle_time(observer, tz, angle_target):
         t += step
     return None
 
+
 # === Main logic ===
 lat, lon, timezone = load_env_vars()
 city = LocationInfo("Custom", "Earth", timezone, lat, lon)
@@ -72,21 +75,33 @@ result = {
     "sunrise": sunrise(obs, today, tzinfo=tz).strftime("%H:%M"),
     "sunset": sunset(obs, today, tzinfo=tz).strftime("%H:%M"),
     "dawn": {
-        "civil": civil_dawn(obs, today, tzinfo=tz).strftime("%H:%M"),
-        "nautical": nautical_dawn(obs, today, tzinfo=tz).strftime("%H:%M"),
-        "astronomical": astronomical_dawn(obs, today, tzinfo=tz).strftime("%H:%M"),
+        "civil": dawn(obs, today, depression=Depression.CIVIL, tzinfo=tz).strftime(
+            "%H:%M"
+        ),
+        "nautical": dawn(
+            obs, today, depression=Depression.NAUTICAL, tzinfo=tz
+        ).strftime("%H:%M"),
+        "astronomical": dawn(
+            obs, today, depression=Depression.ASTRONOMICAL, tzinfo=tz
+        ).strftime("%H:%M"),
     },
     "dusk": {
-        "civil": civil_dusk(obs, today, tzinfo=tz).strftime("%H:%M"),
-        "nautical": nautical_dusk(obs, today, tzinfo=tz).strftime("%H:%M"),
-        "astronomical": astronomical_dusk(obs, today, tzinfo=tz).strftime("%H:%M"),
+        "civil": dusk(obs, today, depression=Depression.CIVIL, tzinfo=tz).strftime(
+            "%H:%M"
+        ),
+        "nautical": dusk(
+            obs, today, depression=Depression.NAUTICAL, tzinfo=tz
+        ).strftime("%H:%M"),
+        "astronomical": dusk(
+            obs, today, depression=Depression.ASTRONOMICAL, tzinfo=tz
+        ).strftime("%H:%M"),
     },
     "angle": {
         "35": find_angle_time(obs, tz, 35),
         "40": find_angle_time(obs, tz, 40),
         "75": find_angle_time(obs, tz, 75),
-        "90": find_angle_time(obs, tz, 90)
-    }
+        "90": find_angle_time(obs, tz, 90),
+    },
 }
 
 print(json.dumps(result, indent=2))

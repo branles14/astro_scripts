@@ -1,2 +1,2 @@
 astral
-timezonefinder
+timezonefinder<6

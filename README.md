@@ -6,3 +6,7 @@ configuration files. If running under Termux and `termux-location` is
 available, that tool is used as a last resort to retrieve coordinates. The
 timezone is automatically determined from the resolved coordinates using the
 `timezonefinder` library, so only latitude and longitude need to be provided.
+
+The dependencies are listed in `requirements.txt`. The
+`timezonefinder` package is pinned below version 6 so that a pure-Python
+implementation is installed by default.

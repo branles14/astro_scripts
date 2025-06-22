@@ -1,0 +1,3 @@
+- keep code clean and easily maintainable
+- follow best practices
+- use black

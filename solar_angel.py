@@ -22,5 +22,4 @@ now = datetime.now(tz)
 observer = city.observer
 
 # Get solar angle
-angle = elevation(observer, now)
-print(f"{angle:.2f}°")
+print(elevation(observer, now))

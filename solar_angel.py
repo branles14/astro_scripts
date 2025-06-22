@@ -1,10 +1,20 @@
 from astral import LocationInfo
 from astral.sun import elevation
 from datetime import datetime, timedelta
+import argparse
 import pytz
 
-city = LocationInfo("Broomfield", "USA", "America/Denver", 39.9205, -105.0867)
-tz = pytz.timezone(city.timezone)
+from location import get_location
+
+# Determine location
+parser = argparse.ArgumentParser(description="Show current solar elevation")
+parser.add_argument("--lat", type=float, help="Latitude")
+parser.add_argument("--lon", type=float, help="Longitude")
+args = parser.parse_args()
+
+lat, lon, tz_name = get_location(args.lat, args.lon)
+city = LocationInfo("Custom", "Earth", tz_name, lat, lon)
+tz = pytz.timezone(tz_name)
 
 # Time to check
 now = datetime.now(tz)

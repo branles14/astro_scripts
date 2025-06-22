@@ -1,3 +1,4 @@
+#!/bin/python3
 from astral import LocationInfo, Depression
 from astral.sun import (
     sunrise,

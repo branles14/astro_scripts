@@ -35,6 +35,7 @@ parser.add_argument("--lon", type=float, help="Longitude")
 args = parser.parse_args()
 
 lat, lon, timezone = get_location(args.lat, args.lon)
+
 city = LocationInfo("Custom", "Earth", timezone, lat, lon)
 tz = pytz.timezone(timezone)
 today = date.today()

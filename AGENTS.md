@@ -1,3 +1,4 @@
 - keep code clean and easily maintainable
 - follow best practices
+- make errors exit gracefully with an informative error message
 - use black

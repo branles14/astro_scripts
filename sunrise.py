@@ -12,6 +12,7 @@ parser.add_argument("--lon", type=float, help="Longitude")
 args = parser.parse_args()
 
 lat, lon, tz_name = get_location(args.lat, args.lon)
+
 city = LocationInfo("Custom", "Earth", tz_name, lat, lon)
 s = sun(city.observer, date=date.today(), tzinfo=tz_name)
 

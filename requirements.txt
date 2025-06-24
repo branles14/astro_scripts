@@ -1,2 +1,5 @@
 astral
 timezonefinder<6
+pytz
+python-dotenv
+pandas

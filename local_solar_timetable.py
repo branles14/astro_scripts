@@ -5,6 +5,7 @@ from astral.sun import (
     sunset,
     dawn,
     dusk,
+    noon,
     elevation,
 )
 from datetime import date, datetime, timedelta
@@ -15,16 +16,22 @@ import json
 from location import get_location
 
 
-def find_angle_time(observer, tz, angle_target):
-    now = datetime.combine(date.today(), datetime.min.time())
-    t = tz.localize(now + timedelta(hours=4))  # Start search around dawn
-    end = tz.localize(now + timedelta(hours=22))
-    step = timedelta(minutes=1)
+def _crossing_time(observer, start, end, angle_target, ascending=True):
+    """Return the local time when the sun crosses ``angle_target``."""
 
-    while t < end:
-        angle = elevation(observer, t)
-        if angle >= angle_target:
-            return t.strftime("%H:%M")
+    step = timedelta(minutes=1)
+    t = start
+    prev_angle = elevation(observer, t)
+
+    while t <= end:
+        current_angle = elevation(observer, t)
+        if ascending:
+            if prev_angle < angle_target <= current_angle:
+                return t.strftime("%H:%M")
+        else:
+            if prev_angle > angle_target >= current_angle:
+                return t.strftime("%H:%M")
+        prev_angle = current_angle
         t += step
     return None
 
@@ -42,9 +49,30 @@ tz = pytz.timezone(timezone)
 today = date.today()
 obs = city.observer
 
+sunrise_time = sunrise(obs, today, tzinfo=tz)
+sunset_time = sunset(obs, today, tzinfo=tz)
+noon_time = noon(obs, today, tzinfo=tz)
+
+start_day = tz.localize(datetime.combine(today, datetime.min.time()))
+end_day = tz.localize(datetime.combine(today, datetime.max.time()))
+max_angle = elevation(obs, noon_time)
+
+angles = [a for a in range(0, 95, 5) if a <= max_angle]
+angle_times: dict[str, str] = {}
+
+for angle in angles:
+    t_up = _crossing_time(obs, start_day, noon_time, angle, ascending=True)
+    if t_up:
+        angle_times[f"{angle}_up"] = t_up
+
+for angle in reversed(angles):
+    t_down = _crossing_time(obs, noon_time, end_day, angle, ascending=False)
+    if t_down:
+        angle_times[f"{angle}_down"] = t_down
+
 result = {
-    "sunrise": sunrise(obs, today, tzinfo=tz).strftime("%H:%M"),
-    "sunset": sunset(obs, today, tzinfo=tz).strftime("%H:%M"),
+    "sunrise": sunrise_time.strftime("%H:%M"),
+    "sunset": sunset_time.strftime("%H:%M"),
     "dawn": {
         "civil": dawn(obs, today, depression=Depression.CIVIL, tzinfo=tz).strftime(
             "%H:%M"
@@ -67,27 +95,7 @@ result = {
             obs, today, depression=Depression.ASTRONOMICAL, tzinfo=tz
         ).strftime("%H:%M"),
     },
-    "angle": {
-        "0": find_angle_time(obs, tz, 0),
-        "5": find_angle_time(obs, tz, 5),
-        "10": find_angle_time(obs, tz, 10),
-        "15": find_angle_time(obs, tz, 15),
-        "20": find_angle_time(obs, tz, 20),
-        "25": find_angle_time(obs, tz, 25),
-        "30": find_angle_time(obs, tz, 30),
-        "35": find_angle_time(obs, tz, 35),
-        "40": find_angle_time(obs, tz, 40),
-        "45": find_angle_time(obs, tz, 45),
-        "50": find_angle_time(obs, tz, 50),
-        "55": find_angle_time(obs, tz, 55),
-        "60": find_angle_time(obs, tz, 60),
-        "65": find_angle_time(obs, tz, 65),
-        "70": find_angle_time(obs, tz, 70),
-        "75": find_angle_time(obs, tz, 75),
-        "80": find_angle_time(obs, tz, 80),
-        "85": find_angle_time(obs, tz, 85),
-        "90": find_angle_time(obs, tz, 90),
-    },
+    "angle": angle_times,
 }
 
 print(json.dumps(result, indent=2))
